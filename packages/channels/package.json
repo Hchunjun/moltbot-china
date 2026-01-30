@@ -1,6 +1,6 @@
 {
   "name": "@openclaw-china/channels",
-  "version": "0.1.5",
+  "version": "0.1.13",
   "type": "module",
   "description": "Unified package for all Moltbot China channel plugins",
   "license": "MIT",
@@ -43,8 +43,9 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@openclaw-china/dingtalk": "workspace:*",
-    "@openclaw-china/feishu": "workspace:*"
+    "@openclaw-china/dingtalk": "0.1.14",
+    "@openclaw-china/feishu": "0.1.5",
+    "@openclaw-china/wecom": "0.1.3"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

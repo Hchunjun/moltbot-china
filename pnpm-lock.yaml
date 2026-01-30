@@ -120,6 +120,9 @@ importers:
       '@openclaw-china/feishu':
         specifier: workspace:*
         version: link:../../extensions/feishu
+      '@openclaw-china/wecom':
+        specifier: workspace:*
+        version: link:../../extensions/wecom
       moltbot:
         specifier: '>=0.1.0'
         version: 0.1.0

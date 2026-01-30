@@ -10,6 +10,7 @@ const root = path.resolve(__dirname, "..");
 const sharedPath = path.join(root, "packages", "shared", "package.json");
 const dingtalkPath = path.join(root, "extensions", "dingtalk", "package.json");
 const feishuPath = path.join(root, "extensions", "feishu", "package.json");
+const wecomPath = path.join(root, "extensions", "wecom", "package.json");
 const channelsPath = path.join(root, "packages", "channels", "package.json");
 
 function readJson(p) {
@@ -90,17 +91,20 @@ function getNextVersion(pkgName, localVersion) {
 const sharedPkg = readJson(sharedPath);
 const dingtalkPkg = readJson(dingtalkPath);
 const feishuPkg = readJson(feishuPath);
+const wecomPkg = readJson(wecomPath);
 const channelsPkg = readJson(channelsPath);
 
 const originalShared = readJson(sharedPath);
 const originalDingtalk = readJson(dingtalkPath);
 const originalFeishu = readJson(feishuPath);
+const originalWecom = readJson(wecomPath);
 const originalChannels = readJson(channelsPath);
 
 try {
   const nextShared = getNextVersion(sharedPkg.name, sharedPkg.version);
   const nextDingtalk = getNextVersion(dingtalkPkg.name, dingtalkPkg.version);
   const nextFeishu = getNextVersion(feishuPkg.name, feishuPkg.version);
+  const nextWecom = getNextVersion(wecomPkg.name, wecomPkg.version);
   const nextChannels = getNextVersion(channelsPkg.name, channelsPkg.version);
 
   sharedPkg.version = nextShared;
@@ -116,25 +120,33 @@ try {
   feishuPkg.dependencies = feishuPkg.dependencies ?? {};
   feishuPkg.dependencies["@openclaw-china/shared"] = nextShared;
 
+  wecomPkg.version = nextWecom;
+  wecomPkg.private = false;
+  wecomPkg.dependencies = wecomPkg.dependencies ?? {};
+  wecomPkg.dependencies["@openclaw-china/shared"] = nextShared;
+
   channelsPkg.version = nextChannels;
   channelsPkg.dependencies = channelsPkg.dependencies ?? {};
   channelsPkg.dependencies["@openclaw-china/dingtalk"] = nextDingtalk;
   channelsPkg.dependencies["@openclaw-china/feishu"] = nextFeishu;
-  delete channelsPkg.dependencies["@openclaw-china/wecom"];
+  channelsPkg.dependencies["@openclaw-china/wecom"] = nextWecom;
 
   writeJson(sharedPath, sharedPkg);
   writeJson(dingtalkPath, dingtalkPkg);
   writeJson(feishuPath, feishuPkg);
+  writeJson(wecomPath, wecomPkg);
   writeJson(channelsPath, channelsPkg);
 
   run("pnpm -F @openclaw-china/shared build");
   run("pnpm -F @openclaw-china/dingtalk build");
   run("pnpm -F @openclaw-china/feishu build");
+  run("pnpm -F @openclaw-china/wecom build");
   run("pnpm -F @openclaw-china/channels build");
 
   run("npm publish --access public", path.join(root, "packages", "shared"));
   run("npm publish --access public", path.join(root, "extensions", "dingtalk"));
   run("npm publish --access public", path.join(root, "extensions", "feishu"));
+  run("npm publish --access public", path.join(root, "extensions", "wecom"));
   run("npm publish --access public", path.join(root, "packages", "channels"));
 } finally {
   // Restore workspace dependencies for local development
@@ -146,15 +158,22 @@ try {
     originalFeishu.dependencies["@openclaw-china/shared"] =
       originalFeishu.dependencies["@openclaw-china/shared"] ?? "workspace:*";
   }
+  if (originalWecom.dependencies) {
+    originalWecom.dependencies["@openclaw-china/shared"] =
+      originalWecom.dependencies["@openclaw-china/shared"] ?? "workspace:*";
+  }
   if (originalChannels.dependencies) {
     originalChannels.dependencies["@openclaw-china/dingtalk"] =
       originalChannels.dependencies["@openclaw-china/dingtalk"] ?? "workspace:*";
     originalChannels.dependencies["@openclaw-china/feishu"] =
       originalChannels.dependencies["@openclaw-china/feishu"] ?? "workspace:*";
+    originalChannels.dependencies["@openclaw-china/wecom"] =
+      originalChannels.dependencies["@openclaw-china/wecom"] ?? "workspace:*";
   }
 
   writeJson(sharedPath, originalShared);
   writeJson(dingtalkPath, originalDingtalk);
   writeJson(feishuPath, originalFeishu);
+  writeJson(wecomPath, originalWecom);
   writeJson(channelsPath, originalChannels);
 }

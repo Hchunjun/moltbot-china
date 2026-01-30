@@ -12,12 +12,14 @@
 |------|:----:|
 | 钉钉 | ✅ 可用 |
 | 飞书 | ✅ 可用 |
-| 企业微信 | 🚧 开发中 |
+| 企业微信 | ✅ 可用 |
 | QQ 机器人 | 🚧 开发中 |
 
 ## 快速开始
 
 ### 1) 安装
+
+> 飞书、企业微信保姆文档编写中，现在最容易配置的是钉钉，建议先尝试钉钉。
 
 **安装统一包（包含所有渠道）**
 
@@ -33,6 +35,10 @@ clawdbot plugins install @openclaw-china/dingtalk
 
 ```bash
 clawdbot plugins install @openclaw-china/feishu
+```
+
+```bash
+clawdbot plugins install @openclaw-china/wecom
 ```
 
 ### 2) 配置渠道
@@ -79,6 +85,25 @@ clawdbot config set channels.feishu '{
   "appSecret": "your-app-secret"
 }' --json
 ```
+
+#### 企业微信
+
+> 企业微信智能机器人（API 模式）通过公网 HTTPS 回调接收消息，仅支持被动回复
+
+```bash
+clawdbot config set channels.wecom '{
+  "enabled": true,
+  "webhookPath": "/wecom",
+  "token": "your-token",
+  "encodingAESKey": "your-43-char-encoding-aes-key"
+}' --json
+```
+
+**注意事项**
+
+- `webhookPath` 必须为公网 HTTPS 可访问路径（如 `https://your.domain/wecom`）
+- `encodingAESKey` 必须为 43 位字符
+- 如遇回调校验失败，先确认 Token/EncodingAESKey 与后台一致
 
 ### 3) 重启 Gateway
 
@@ -162,6 +187,12 @@ clawdbot plugins install -l ./packages/channels
       "enabled": true,
       "appId": "cli_xxxxxx",
       "appSecret": "your-app-secret"
+    },
+    "wecom": {
+      "enabled": true,
+      "webhookPath": "/wecom",
+      "token": "your-token",
+      "encodingAESKey": "your-43-char-encoding-aes-key"
     }
   }
 }
