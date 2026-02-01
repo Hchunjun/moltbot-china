@@ -172,6 +172,7 @@ openclaw gateway restart
 | `requireMention` | 群聊中是否需要 @机器人 |
 | `allowFrom` | 私聊白名单用户 ID |
 | `groupAllowFrom` | 群聊白名单群 ID |
+| `maxFileSizeMB` | 媒体文件大小限制 (MB)，默认 100 |
 
 
 ### 会话配置（可选）

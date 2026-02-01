@@ -16,6 +16,7 @@ import { z } from "zod";
  * - historyLimit: 历史消息数量限制
  * - textChunkLimit: 文本分块大小限制
  * - enableAICard: 是否启用 AI Card 流式响应
+ * - maxFileSizeMB: 媒体文件大小限制 (MB)
  */
 export const DingtalkConfigSchema = z.object({
   /** 是否启用钉钉渠道 */
@@ -50,6 +51,9 @@ export const DingtalkConfigSchema = z.object({
   
   /** 是否启用 AI Card 流式响应 */
   enableAICard: z.boolean().optional().default(true),
+  
+  /** 媒体文件大小限制 (MB)，默认 100MB */
+  maxFileSizeMB: z.number().positive().optional().default(100),
   
 });
 

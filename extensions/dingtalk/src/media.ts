@@ -434,6 +434,7 @@ export async function sendMediaDingtalk(
       mediaId: uploadResult.mediaId,
       mediaType,
       accessToken,
+      fileName: name,
     });
   } else {
     return sendGroupMediaMessage({
@@ -442,6 +443,7 @@ export async function sendMediaDingtalk(
       mediaId: uploadResult.mediaId,
       mediaType,
       accessToken,
+      fileName: name,
     });
   }
 }
@@ -475,11 +477,13 @@ function getMsgKeyForMediaType(
  *
  * @param mediaId 媒体 ID
  * @param mediaType 媒体类型
+ * @param fileName 文件名（用于 file 类型）
  * @returns msgParam JSON 字符串
  */
 function buildMediaMsgParam(
   mediaId: string,
-  mediaType: "image" | "voice" | "video" | "file"
+  mediaType: "image" | "voice" | "video" | "file",
+  fileName?: string
 ): string {
   switch (mediaType) {
     case "image":
@@ -493,7 +497,7 @@ function buildMediaMsgParam(
         duration: "1000",
       });
     case "file":
-      return JSON.stringify({ mediaId, fileName: "file", fileType: "file" });
+      return JSON.stringify({ mediaId, fileName: fileName ?? "file", fileType: "file" });
     default:
       return JSON.stringify({ mediaId });
   }
@@ -510,8 +514,9 @@ async function sendDirectMediaMessage(params: {
   mediaId: string;
   mediaType: "image" | "voice" | "video" | "file";
   accessToken: string;
+  fileName?: string;
 }): Promise<DingtalkSendResult> {
-  const { cfg, to, mediaId, mediaType, accessToken } = params;
+  const { cfg, to, mediaId, mediaType, accessToken, fileName } = params;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -529,7 +534,7 @@ async function sendDirectMediaMessage(params: {
           robotCode: cfg.clientId,
           userIds: [to],
           msgKey: getMsgKeyForMediaType(mediaType),
-          msgParam: buildMediaMsgParam(mediaId, mediaType),
+          msgParam: buildMediaMsgParam(mediaId, mediaType, fileName),
         }),
         signal: controller.signal,
       }
@@ -573,8 +578,9 @@ async function sendGroupMediaMessage(params: {
   mediaId: string;
   mediaType: "image" | "voice" | "video" | "file";
   accessToken: string;
+  fileName?: string;
 }): Promise<DingtalkSendResult> {
-  const { cfg, to, mediaId, mediaType, accessToken } = params;
+  const { cfg, to, mediaId, mediaType, accessToken, fileName } = params;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
@@ -592,7 +598,7 @@ async function sendGroupMediaMessage(params: {
           robotCode: cfg.clientId,
           openConversationId: to,
           msgKey: getMsgKeyForMediaType(mediaType),
-          msgParam: buildMediaMsgParam(mediaId, mediaType),
+          msgParam: buildMediaMsgParam(mediaId, mediaType, fileName),
         }),
         signal: controller.signal,
       }
@@ -1005,10 +1011,10 @@ export function parseRichTextMessage(data: unknown): RichTextParseResult | null 
  * File size limits by message type (in bytes)
  */
 const FILE_SIZE_LIMITS: Record<string, number> = {
-  picture: 10 * 1024 * 1024, // 10MB
-  video: 20 * 1024 * 1024, // 20MB
-  audio: 2 * 1024 * 1024, // 2MB
-  file: 20 * 1024 * 1024, // 20MB
+  picture: 100 * 1024 * 1024, // 100MB
+  video: 100 * 1024 * 1024, // 100MB
+  audio: 100 * 1024 * 1024, // 100MB
+  file: 100 * 1024 * 1024, // 100MB
 };
 
 /** Download timeout in milliseconds (120 seconds) */
@@ -1044,6 +1050,8 @@ export interface DownloadDingTalkFileParams {
   msgType?: MediaMsgType;
   /** Logger instance (optional) */
   log?: Logger;
+  /** Max file size in MB (optional, defaults to 100MB) */
+  maxFileSizeMB?: number;
 }
 
 /**
@@ -1081,9 +1089,13 @@ export interface DownloadDingTalkFileParams {
 export async function downloadDingTalkFile(
   params: DownloadDingTalkFileParams
 ): Promise<DownloadedFile> {
-  const { downloadCode, robotCode, accessToken, fileName, log } = params;
+  const { downloadCode, robotCode, accessToken, fileName, log, maxFileSizeMB } = params;
   // Default msgType to "file" to ensure size limits are always enforced
   const msgType = params.msgType ?? "file";
+  
+  // Calculate size limit: use config value if provided, otherwise use default
+  const defaultLimit = FILE_SIZE_LIMITS[msgType] ?? FILE_SIZE_LIMITS.file;
+  const sizeLimit = maxFileSizeMB ? maxFileSizeMB * 1024 * 1024 : defaultLimit;
 
   // Step 1: Get download URL from DingTalk API (with separate timeout)
   const apiController = new AbortController();
@@ -1156,8 +1168,6 @@ export async function downloadDingTalkFile(
     const contentLength = contentLengthHeader ? parseInt(contentLengthHeader, 10) : null;
 
     // Step 3: Check Content-Length against size limit
-    const sizeLimit = FILE_SIZE_LIMITS[msgType];
-
     if (contentLength !== null && contentLength > sizeLimit) {
       // Abort immediately without downloading body
       downloadController.abort();
@@ -1234,6 +1244,8 @@ export interface DownloadRichTextImagesParams {
   accessToken: string;
   /** Logger instance (optional) */
   log?: Logger;
+  /** Max file size in MB (optional, defaults to 100MB) */
+  maxFileSizeMB?: number;
 }
 
 /**
@@ -1260,7 +1272,7 @@ export interface DownloadRichTextImagesParams {
 export async function downloadRichTextImages(
   params: DownloadRichTextImagesParams
 ): Promise<DownloadedFile[]> {
-  const { imageCodes, robotCode, accessToken, log } = params;
+  const { imageCodes, robotCode, accessToken, log, maxFileSizeMB } = params;
 
   const results: DownloadedFile[] = [];
   const total = imageCodes.length;
@@ -1280,6 +1292,7 @@ export async function downloadRichTextImages(
         accessToken,
         msgType: "picture",
         log,
+        maxFileSizeMB,
       });
 
       results.push(file);

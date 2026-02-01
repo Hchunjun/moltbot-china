@@ -93,9 +93,22 @@ openclaw config set channels.dingtalk '{
   "enabled": true,
   "clientId": "dingxxxxxx",
   "clientSecret": "your-app-secret",
-  "enableAICard": true
+  "enableAICard": true,
+  "maxFileSizeMB": 100
 }' --json
 ```
+
+配置项说明：
+| 配置项 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| enabled | boolean | true | 是否启用钉钉渠道 |
+| clientId | string | - | 钉钉应用 AppKey |
+| clientSecret | string | - | 钉钉应用 AppSecret |
+| dmPolicy | string | "open" | 单聊策略: open/pairing/allowlist |
+| groupPolicy | string | "open" | 群聊策略: open/allowlist/disabled |
+| requireMention | boolean | true | 群聊是否需要 @机器人 |
+| enableAICard | boolean | true | 是否启用 AI Card 流式响应 |
+| maxFileSizeMB | number | 100 | 媒体文件大小限制 (MB) |
 ### 2. OpenClaw初始化
 ```
 openclaw onboard --install-daemon

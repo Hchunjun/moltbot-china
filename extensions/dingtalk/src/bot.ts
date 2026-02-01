@@ -222,6 +222,16 @@ async function handleAICardStreaming(params: {
     const core = getDingtalkRuntime();
     let lastUpdateTime = 0;
     const updateInterval = 300; // 最小更新间�?ms
+    const firstFrameContent = " ";
+    let firstFrameSent = false;
+
+    try {
+      await streamAICard(card, firstFrameContent, false, (msg) => logger.debug(msg));
+      firstFrameSent = true;
+      lastUpdateTime = Date.now();
+    } catch (err) {
+      logger.debug(`failed to send first frame: ${String(err)}`);
+    }
 
     // 创建回复分发�?
     const coreChannel = (core as Record<string, unknown>)?.channel as Record<string, unknown> | undefined;
@@ -253,9 +263,10 @@ async function handleAICardStreaming(params: {
 
             // 节流更新，避免过于频�?
             const now = Date.now();
-            if (now - lastUpdateTime >= updateInterval) {
+            if (!firstFrameSent || now - lastUpdateTime >= updateInterval) {
               await streamAICard(card, accumulated, false, (msg) => logger.debug(msg));
               lastUpdateTime = now;
+              firstFrameSent = true;
             }
           },
           humanDelay,
@@ -271,16 +282,17 @@ async function handleAICardStreaming(params: {
                 const textValue = (payload as Record<string, unknown>)["text"];
                 text = typeof textValue === "string" ? textValue : "";
               }
-              if (!text.trim()) return;
+            if (!text.trim()) return;
 
-              accumulated += text;
+            accumulated += text;
 
-              const now = Date.now();
-              if (now - lastUpdateTime >= updateInterval) {
-                await streamAICard(card, accumulated, false, (msg) => logger.debug(msg));
-                lastUpdateTime = now;
-              }
-            },
+            const now = Date.now();
+            if (!firstFrameSent || now - lastUpdateTime >= updateInterval) {
+              await streamAICard(card, accumulated, false, (msg) => logger.debug(msg));
+              lastUpdateTime = now;
+              firstFrameSent = true;
+            }
+          },
             humanDelay,
             onError: (err: unknown, info: { kind: string }) => {
               logger.error(`${info.kind} reply failed: ${String(err)}`);
@@ -574,6 +586,7 @@ export async function handleDingtalkMessage(params: {
             fileName: extractedFileInfo.fileName,
             msgType: extractedFileInfo.msgType,
             log: logger,
+            maxFileSizeMB: channelCfg.maxFileSizeMB,
           });
           
           logger.debug(`downloaded media file: ${downloadedMedia.path} (${downloadedMedia.size} bytes)`);
@@ -611,6 +624,7 @@ export async function handleDingtalkMessage(params: {
               robotCode: channelCfg.clientId,
               accessToken,
               log: logger,
+              maxFileSizeMB: channelCfg.maxFileSizeMB,
             });
             
             logger.debug(`downloaded ${downloadedRichTextImages.length}/${richTextParseResult.imageCodes.length} richText images`);
