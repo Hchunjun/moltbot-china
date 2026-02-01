@@ -574,7 +574,7 @@ async function handleAICardStreaming(params: {
     }
 
     // 根据配置选择流式源
-    const streamSource = dingtalkCfg.streamSource ?? "gateway-sse";
+    const streamSource = dingtalkCfg.streamSource ?? "gateway-ws";
     logger.debug(`[stream] using source: ${streamSource}`);
     const gatewayUserContent = buildGatewayUserContent(inboundCtx, logger);
 

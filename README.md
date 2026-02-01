@@ -109,6 +109,15 @@ openclaw config set channels.dingtalk '{
 }' --json
 ```
 
+**Windows 用户**（CMD 不支持单引号 JSON）：
+
+```cmd
+openclaw config set channels.dingtalk.enabled true
+openclaw config set channels.dingtalk.clientId dingxxxxxx
+openclaw config set channels.dingtalk.clientSecret your-app-secret
+openclaw config set channels.dingtalk.enableAICard true
+```
+
 **可选高级配置**
 
 如果你需要更细粒度控制（例如私聊/群聊策略或白名单），可以在 `~/.openclaw/openclaw.json` 中按需添加：

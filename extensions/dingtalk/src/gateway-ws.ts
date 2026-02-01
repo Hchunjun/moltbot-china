@@ -112,7 +112,7 @@ export class GatewayWsClient {
       minProtocol: 3,
       maxProtocol: 3,
       client: {
-        id: "dingtalk-plugin",
+        id: "gateway-client",
         version: "moltbot-china",
         platform: process.platform,
         mode: "backend",

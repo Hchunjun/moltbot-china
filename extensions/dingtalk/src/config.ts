@@ -58,8 +58,8 @@ export const DingtalkConfigSchema = z.object({
   /** Gateway auth password（替代 gatewayToken） */
   gatewayPassword: z.string().optional(),
 
-  /** 流式输出源: "gateway-sse" (HTTP SSE) | "gateway-ws" (WebSocket) */
-  streamSource: z.enum(["gateway-sse", "gateway-ws"]).optional().default("gateway-sse"),
+  /** 流式输出源: "gateway-ws" (WebSocket) | "gateway-sse" (HTTP SSE) */
+  streamSource: z.enum(["gateway-sse", "gateway-ws"]).optional().default("gateway-ws"),
 
   /** Gateway WebSocket URL，默认 ws://127.0.0.1:18789 */
   gatewayWsUrl: z.string().optional(),
